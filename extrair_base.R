@@ -69,54 +69,43 @@ arquivos_caged <- function(entrada) {
 }
 
 # Extrair por competências
-# Competência 'MOV'
+## manter isso para trabalhar com as bases mais rapidamente
 df_mov <- arquivos_caged('MOV')
-# Competência 'FOR'
 df_for <- arquivos_caged('FOR')
-# Competência 'EXC'
 df_exc <- arquivos_caged('EXC')
+rm(cagedexc_baixadas,cagedexc_lista,cagedfor_baixadas,cagedfor_lista,cagedmov_baixadas,cagedmov_lista,arquivos_caged)
 
 # CÁLCULO GERAL - MARANHÃO ----
-## Func para obter saldo  
-## Obter saldo de movimentação
-saldo_mov <- df_mov %>%
-group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-         idade,racacor,sexo,tamestabjan, tipodedeficiencia) %>%
-summarise(saldo = sum(saldomovimentacao))
-
-#Obter saldo de fora do prazo 
-saldo_for <- df_for %>%
-  group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-           idade,racacor,sexo,tamestabjan,tipodedeficiencia) %>% 
-  summarise(saldo = sum(saldomovimentacao))
-
-#Obter saldo de excluidos 
-saldo_exc <- df_exc %>%
-  group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-           idade,racacor,sexo,tamestabjan,tipodedeficiencia) %>% 
-  summarise(saldo = sum(saldomovimentacao)) 
+## Func para extrair o saldo
+montar_saldo <- function(df){
+  saldo <- df |>
+    group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
+             idade,racacor,sexo,tamestabjan, tipodedeficiencia) |>
+    summarise(saldo = sum(saldomovimentacao))
+  return(saldo)
+}
+saldo_mov <- montar_saldo(df_mov)
+saldo_for <- montar_saldo(df_for)
+saldo_exc <- montar_saldo(df_exc)
 
 # Somar os saldos de movimentação e fora do prazo pela competência
-saldo_soma <- bind_rows(
-  mutate(saldo_mov, competencia = as.character(competenciamov)),
-  mutate(saldo_for, competencia = as.character(competenciamov)),
-) %>%
-group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-         idade,racacor,sexo,tamestabjan,tipodedeficiencia) %>%
-summarise(saldo = sum(saldo, na.rm = TRUE))
+saldo_soma <- bind_rows(saldo_mov, saldo_for) |>
+  group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
+           idade,racacor,sexo,tamestabjan,tipodedeficiencia) |>
+  summarise(saldo = sum(saldo, na.rm = TRUE))
 
 ## Calcular saldo ajustado
 saldo_ajustado <- left_join(saldo_soma, saldo_exc, 
                             by = c("competenciamov","municipio","secao",
                                    "subclasse","cbo2002ocupacao","graudeinstrucao",
-                                   "idade","racacor","sexo","tamestabjan", "tipodedeficiencia")) %>%
-mutate(saldo_ajuste = saldo.x - coalesce(saldo.y, 0)) %>%
-select(competenciamov,municipio, secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-       idade,racacor,sexo,tamestabjan,tipodedeficiencia,saldo_ajuste)
+                                   "idade","racacor","sexo","tamestabjan", "tipodedeficiencia")) |>
+  mutate(saldo_ajuste = saldo.x - coalesce(saldo.y, 0)) |>
+  select(competenciamov,municipio, secao,subclasse,cbo2002ocupacao,graudeinstrucao,
+         idade,racacor,sexo,tamestabjan,tipodedeficiencia,saldo_ajuste)
 
 # Calcular saldo ajustado - serie
-saldo_serie <- saldo_ajustado %>%
-  group_by(competenciamov) %>%
+saldo_serie <- saldo_ajustado |>
+  group_by(competenciamov) |>
   summarise(saldo_serie = sum(saldo_ajuste))
 
 saldo_serie$periodo <- seq(nrow(saldo_serie))
@@ -126,27 +115,18 @@ ggplot(data=saldo_serie,
 geom_bar(stat = 'identity') 
 
 # CÁLCULO ATIVIDADE PORTUÁRIA - MARANHÃO ----
-#  & subclasse %in% c(5231101,5231102,5231103)
-## Obter saldo de movimentação
-saldo_mov_port <- df_mov %>%
-  filter(subclasse %in% c(5231101,5231102,5231103))|>
-  group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-           idade,racacor,sexo,tamestabjan, tipodedeficiencia) |>
-  summarise(saldo = sum(saldomovimentacao))
-
-#Obter saldo de fora do prazo 
-saldo_for_port <- df_for %>%
-  filter(subclasse %in% c(5231101,5231102,5231103))|>
-  group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-           idade,racacor,sexo,tamestabjan,tipodedeficiencia) %>% 
-  summarise(saldo = sum(saldomovimentacao))
-
-#Obter saldo de excluidos 
-saldo_exc_port <- df_exc %>%
-  filter(subclasse %in% c(5231101,5231102,5231103))|>
-  group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-           idade,racacor,sexo,tamestabjan,tipodedeficiencia) %>% 
-  summarise(saldo = sum(saldomovimentacao)) 
+#  subclasse %in% c(5231101,5231102,5231103)
+montar_saldo <- function(df){
+  saldo <- df |>
+    filter(subclasse %in% c(5231101,5231102,5231103)) |>
+    group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
+             idade,racacor,sexo,tamestabjan, tipodedeficiencia) |>
+    summarise(saldo = sum(saldomovimentacao))
+  return(saldo)
+}
+saldo_mov_port <- montar_saldo(df_mov)
+saldo_for_port <- montar_saldo(df_for)
+saldo_exc_port <- montar_saldo(df_exc)
 
 # Somar os saldos de movimentação e fora do prazo pela competência
 saldo_soma_port <- bind_rows(
@@ -158,13 +138,14 @@ saldo_soma_port <- bind_rows(
   summarise(saldo = sum(saldo, na.rm = TRUE))
 
 ## Calcular saldo ajustado
-saldo_ajustado_port <- left_join(saldo_soma_port, saldo_exc, 
+saldo_ajustado_port <- left_join(saldo_soma_port, saldo_exc_port, 
                             by = c("competenciamov","municipio","secao",
                                    "subclasse","cbo2002ocupacao","graudeinstrucao",
                                    "idade","racacor","sexo","tamestabjan", "tipodedeficiencia")) %>%
   mutate(saldo_ajuste = saldo.x - coalesce(saldo.y, 0)) %>%
   select(competenciamov,municipio, secao,subclasse,cbo2002ocupacao,graudeinstrucao,
          idade,racacor,sexo,tamestabjan,tipodedeficiencia,saldo_ajuste)
+rm(saldo_exc_port,saldo_for_port,saldo_mov_port,saldo_soma_port)
 
 # Calcular saldo ajustado - serie
 saldo_serie_port <- saldo_ajustado_port |>
@@ -172,6 +153,7 @@ saldo_serie_port <- saldo_ajustado_port |>
   arrange(competenciamov) |>
   summarise(saldo_serie = sum(saldo_ajuste))
 
+# opção melhor para fazer o período 
 saldo_serie_port <- saldo_serie_port |>
   mutate(date = as.Date(paste0(substr(competenciamov,5,6), 
                                '-01-', 
