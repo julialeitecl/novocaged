@@ -8,3 +8,10 @@
 
 ## Saldo Portuário - Brasil
 <img width="100%" src="/graph/saldo_portuario_br.png">
+
+### CNAES 
+5231-1/01 Administração da infraestrutura portuária
+
+5231-1/02 Atividades do operador portuário
+
+5231-1/03 Gestão de terminais aquaviários
