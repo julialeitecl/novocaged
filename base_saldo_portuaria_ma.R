@@ -2,6 +2,8 @@ setwd("~/TCC/dados")
 
 ### pasta origem do novocaged: ftp://ftp.mtps.gov.br/pdet/microdados/
 
+# RODAR
+
 # PACOTES ----
 library(tidyverse)
 library(archive)
@@ -91,6 +93,7 @@ saldo_soma_port <- bind_rows(
   summarise(saldo = sum(saldo, na.rm = TRUE))
 
 ## Calcular saldo ajustado
+### MERGE
 saldo_ajustado_port <- left_join(saldo_soma_port, saldo_exc_port, 
                                  by = c("competenciamov","municipio","secao",
                                         "subclasse","cbo2002ocupacao","graudeinstrucao",

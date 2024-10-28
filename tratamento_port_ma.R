@@ -36,16 +36,23 @@ base <- base|>
 
 View(describe(base))
 
-# 2 Saldo por ano ----
+# 2 Saldo por ano e mes ----
 saldo_por_ano <- base |>
   group_by(ano) |>
   summarise(saldo = sum(saldomovimentacao))
 
+saldo_por_mes <- base |>
+  group_by(ano,mes) |>
+  summarise(saldo = sum(saldomovimentacao))
+
 # 3 Sazonalidade ----
-
-# / SALDO
-
-
+ggplot(saldo_por_mes, aes(x = mes, y = saldo, color = factor(ano), group = ano)) +
+  geom_line(size = 1) +
+  scale_x_continuous(breaks = seq(1, 12, by = 1)) + 
+  ggtitle("Saldo de empregos por ano e mês (2020-2023)") +
+  theme_bw(base_size = 10) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(color="Anos") 
 
 # Trabalho mais "destruído e criado" ----
 # 3.1 Por mês 
