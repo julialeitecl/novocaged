@@ -121,8 +121,13 @@ ggplot(data=saldo_serie,
   geom_bar(stat = 'identity') +
   labs(x = "ano/mês", y = "saldo ajustado") +
   ggtitle('Saldo Geral - Maranhão') +
+  theme_bw(base_size = 10) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5)) 
+  
+setwd("~/TCC/novocaged/graph")
+ggsave('saldo_portuario_ma.png')
 
 library(writexl)
+setwd('~/TCC/novocaged/salvo_excel')
 write_xlsx(saldo_serie, 'saldo_maranhao.xlsx')
