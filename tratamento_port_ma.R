@@ -2,6 +2,7 @@ library(tidyverse)
 library(readxl)
 library(psych)
 library(RColorBrewer) #cores graph
+library(scales) #uso de formato de número
 
 # 1 Tratamento e limpeza ----
 setwd('~/TCC/novocaged/memoriaR/portuaria_ma')
@@ -46,13 +47,71 @@ saldo_por_mes <- base |>
   summarise(saldo = sum(saldomovimentacao))
 
 # 3 Sazonalidade ----
+## Saldo
 ggplot(saldo_por_mes, aes(x = mes, y = saldo, color = factor(ano), group = ano)) +
   geom_line(size = 1) +
   scale_x_continuous(breaks = seq(1, 12, by = 1)) + 
-  ggtitle("Saldo de empregos por ano e mês (2020-2023)") +
+  ggtitle("Saldo de empregos do Porto do Itaqui por ano e mês (2020-2023)") +
+  labs(x = "Mês",
+       y = 'Saldo') +
   theme_bw(base_size = 10) +
   theme(plot.title = element_text(hjust = 0.5)) +
   labs(color="Anos") 
+
+## Movimentação portuária
+setwd('~/TCC/novocaged')
+mov_port <- read_excel('mov_port_itaqui.xlsx')
+# limpando base 
+mov_port <- mov_port |>
+  select(-"Nome da Instalação") |>
+  rename(ano = Ano, mes = Mês, saldo = 'Total de Movimentação Portuária em toneladas (t)')
+
+# alterando meses 
+mov_port <- mov_port |>
+  mutate(mes = recode(mes,
+                     'jan' = '01',
+                     'fev' = '02',
+                     'mar' = '03',
+                     'abr' = '04',
+                     'mai' = '05',
+                     'jun' = '06',
+                     'jul' = '07',
+                     'ago' = '08',
+                     'set' = '09',
+                     'out' = '10',
+                     'nov' = '11',
+                     'dez' = '12')) 
+
+# gráfico com anos separados
+ggplot(mov_port, aes(x = as.numeric(mes), y = saldo, color = factor(ano), group = ano)) +
+  geom_line(size = 1) +
+  ggtitle("Movimentação portuária (t) do Porto do Itaqui por ano e mês (2020-2023)") +
+  labs(x = "mês",
+       y = 'movimentação') +
+  theme_bw(base_size = 10) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(color="Anos") +
+  scale_x_continuous(breaks = seq(1, 12, by = 1)) +
+  scale_y_continuous(labels = scales::number)
+
+setwd("~/TCC/novocaged/graph")
+ggsave('mov_port_itaqui_por_ano.png')
+                                                                                            # gráfico com série contínua
+mov_port <- mov_port |>
+  mutate(date = ymd(paste0(ano,mes,'01'))) |>
+  mutate(data = format(date, "%Y/%m")) |>
+  subset(select = -c(date))
+
+ggplot(mov_port, aes(x=data, y=saldo, group = 1)) +
+  geom_line() +
+  labs(x = "ano/mês", y = "movimentação") +
+  ggtitle('Movimentação portuária (t) do Porto do Itaqui por ano e mês (2020-2023)') +
+  theme_bw(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(labels = scales::number)
+
+ggsave('mov_port_itaqui_serie.png')
 
 # Trabalho mais "destruído e criado" ----
 # 3.1 Por mês 
@@ -143,7 +202,7 @@ table(base_perfil$genero,base_perfil$ano)
 x1<-ggplot(base_perfil, aes(x=ano)) + 
   geom_bar(aes(fill = as.factor(genero)),position = "fill") +
   ggtitle("Distribuição dos trabalhadores por gênero e ano") +
-  theme_bw(base_size = 10) +
+  theme_bw(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_fill_discrete(name="Gênero") 
 
@@ -152,7 +211,7 @@ table(base_perfil$cor_raca,base_perfil$ano)
 x2<-ggplot(base_perfil, aes(x=ano)) + 
   geom_bar(aes(fill = as.factor(cor_raca)),position = "fill") +
   ggtitle("Distribuição dos trabalhadores por cor/raça e ano") +
-  theme_bw(base_size = 10) +
+  theme_bw(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_fill_discrete(name="Cor/Raça",
                       breaks=c('Amarela','Branca','Indígena','Parda','Preta','N/A'))
@@ -162,7 +221,7 @@ table(base_perfil$instrucao,base_perfil$ano)
 x3<-ggplot(base_perfil, aes(x=ano)) + 
   geom_bar(aes(fill = as.factor(instrucao)),position = "fill") +
   labs(title = 'Distribuição dos trabalhadores por escolaridade e ano') +
-  theme_bw(base_size = 10) +
+  theme_bw(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_fill_discrete(name="Escolaridade",
                       breaks=c('Fundamental Incompleto','Fundamental Completo',
@@ -177,7 +236,7 @@ table(base_perfil$faixa_salarial,base_perfil$ano)
 x4<-ggplot(base_perfil, aes(x=ano)) + 
   geom_bar(aes(fill = as.factor(faixa_salarial)),position = "fill") +
   labs(title = 'Distribuição dos trabalhadores por faixa salarial (SM) e ano') +
-  theme_bw(base_size = 10) +
+  theme_bw(base_size = 12) +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_fill_discrete(name="Faixa Salarial (SM)",
                       breaks=c('<1SM','1-3SM','3-5SM','5-10SM','>10SM'))

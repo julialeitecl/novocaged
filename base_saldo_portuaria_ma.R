@@ -123,7 +123,7 @@ ggplot(data=saldo_serie_port,
        mapping = aes(x=data, y=saldo_serie)) +
   geom_bar(stat = 'identity') +
   labs(x = "ano/mês", y = "saldo ajustado") +
-  ggtitle('Saldo Atividade Portuária - Maranhão') +
+  ggtitle('Saldo de Empregos no Porto do Itaqui - Maranhão') +
   theme_bw(base_size = 10) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
         plot.title = element_text(hjust = 0.5)) 
