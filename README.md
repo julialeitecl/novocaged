@@ -12,10 +12,10 @@
 ### CNAES 
 5231-1/02 Atividades do operador portuário
 
-5232000
+5232000 Atividades de agenciamento marítimo
 
-5211701
+5211701 Armazéns gerais - emissão de warrant
 
-4731800
+4731800 Comércio varejista de combustíveis
 
-3511501
+3511501 Geração de energia elétrica
