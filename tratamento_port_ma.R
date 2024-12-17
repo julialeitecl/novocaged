@@ -3,6 +3,7 @@ library(readxl)
 library(psych)
 library(RColorBrewer) #cores graph
 library(scales) #uso de formato de número
+library(writexl)
 
 # 1 Tratamento e limpeza ----
 setwd('~/TCC/novocaged/memoriaR/portuaria_ma')
@@ -10,7 +11,6 @@ base <- readRDS('ma_base_perfil.Rds')
 
 View(describe(base))
 unique(base$municipio)
-# result: 211130 (slz) 210173 (belagua)
 
 # conferir valores únicos
 # for (coluna in colnames(base)) {
@@ -96,7 +96,7 @@ ggplot(mov_port, aes(x = as.numeric(mes), y = saldo, color = factor(ano), group 
 
 setwd("~/TCC/novocaged/graph")
 ggsave('mov_port_itaqui_por_ano.png')
-                                                                                            # gráfico com série contínua
+# gráfico com série contínua
 mov_port <- mov_port |>
   mutate(date = ymd(paste0(ano,mes,'01'))) |>
   mutate(data = format(date, "%Y/%m")) |>
