@@ -1,15 +1,16 @@
-setwd("~/TCC/dados")
+# EXTRAI A BASE ESPECIFICAMENTE PARA O PORTO DO ITAQUI PELAS CNAES SELECIONADAS DE ATUACAO DO PORTO
 
 ### pasta origem do novocaged: ftp://ftp.mtps.gov.br/pdet/microdados/
+setwd("~/TCC/dados")
 
 # RODAR
-
 # PACOTES ----
 library(tidyverse)
 library(archive)
 library(readr)
 library(dplyr)
 library(janitor)
+library(writexl)
 
 # DEFININDO COMPETÊNCIAS E PERÍODO -----
 competencias <- c('MOV', 'FOR', 'EXC')
@@ -70,13 +71,13 @@ setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
 
 rm(cagedexc_baixadas,cagedexc_lista,cagedfor_baixadas,cagedfor_lista,cagedmov_baixadas,cagedmov_lista,arquivos_caged,competencias,k,meses,anos,cnaes)
 
-# CÁLCULO ATIVIDADE PORTUÁRIA - MARANHÃO ----
+# CÁLCULO DE ADMITIDOS, DESLIGADOS E SALDO DO PORTO DO ITAQUI - MARANHÃO ----
 montar_saldo <- function(df){
   saldo <- df |>
-    group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-             idade,racacor,sexo,tamestabjan, tipodedeficiencia,salario) |>
-    summarise(saldo = sum(saldomovimentacao))
-  return(saldo)
+    group_by(competenciamov) |>
+    summarise(saldo = sum(saldomovimentacao),
+              admitidos = sum(saldomovimentacao > 0),
+              desligados = sum(saldomovimentacao < 0))
 }
 
 saldo_mov_port <- montar_saldo(df_mov)
@@ -88,42 +89,34 @@ saldo_soma_port <- bind_rows(
   mutate(saldo_mov_port, competencia = as.character(competenciamov)),
   mutate(saldo_for_port, competencia = as.character(competenciamov)),
 ) %>%
-  group_by(competenciamov,municipio,secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-           idade,racacor,sexo,tamestabjan,tipodedeficiencia,salario) %>%
-  summarise(saldo = sum(saldo, na.rm = TRUE))
+  group_by(competenciamov) %>%
+  summarise(saldo = sum(saldo, na.rm = TRUE),
+            admitidos = sum(admitidos, na.rm = TRUE),
+            desligados = sum(desligados, na.rm = TRUE))
 
 ## Calcular saldo ajustado
 ### MERGE
 saldo_ajustado_port <- left_join(saldo_soma_port, saldo_exc_port, 
-                                 by = c("competenciamov","municipio","secao",
-                                        "subclasse","cbo2002ocupacao","graudeinstrucao",
-                                        "idade","racacor","sexo","tamestabjan", "tipodedeficiencia","salario")) %>%
-  mutate(saldo_ajuste = saldo.x - coalesce(saldo.y, 0)) %>%
-  select(competenciamov,municipio, secao,subclasse,cbo2002ocupacao,graudeinstrucao,
-         idade,racacor,sexo,tamestabjan,tipodedeficiencia,saldo_ajuste,salario)
+                                 by = c("competenciamov")) |>
+  mutate(saldo_ajuste = saldo.x - coalesce(saldo.y, 0),
+         admitidos_ajuste = admitidos.x - coalesce(admitidos.y, 0),
+         desligados_ajuste = desligados.x - coalesce(desligados.y, 0)) |>
+  select(competenciamov,saldo_ajuste,admitidos_ajuste,desligados_ajuste)
+
 rm(saldo_exc_port,saldo_for_port,saldo_mov_port,saldo_soma_port,montar_saldo)
 
 # setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
 # saveRDS(saldo_ajustado_port, "ma_base_perfil.Rds")
 
-# Calcular saldo ajustado - serie
-saldo_serie_port <- saldo_ajustado_port |>
-  group_by(competenciamov) |>
-  arrange(competenciamov) |>
-  summarise(saldo_serie = sum(saldo_ajuste),
-            admissoes = sum(saldo_ajuste > 0),
-            desligamentos = sum(saldo_ajuste < 0))
-### CALCULO DE ADM-DESL NÃO BATE COM SALDO  
-
-# Gráfico 
+# Gráfico ----
 library(lubridate)
-saldo_serie_port <- saldo_serie_port |>
+saldo_ajustado_port <- saldo_ajustado_port |>
   mutate(date = ymd(paste0(competenciamov,'01'))) |>
   mutate(data = format(date, "%Y/%m")) |>
   subset(select = -c(date))
 
-ggplot(data=saldo_serie_port,
-       mapping = aes(x=data, y=saldo_serie)) +
+ggplot(data=saldo_ajustado_port,
+       mapping = aes(x=data, y=saldo_ajuste)) +
   geom_bar(stat = 'identity') +
   labs(x = "ano/mês", y = "saldo ajustado") +
   ggtitle('Saldo de Empregos no Porto do Itaqui - Maranhão') +
@@ -134,6 +127,5 @@ ggplot(data=saldo_serie_port,
 # setwd("~/TCC/novocaged/graph")
 # ggsave('saldo_portuario_ma.png')
 
-library(writexl)
-# setwd('~/TCC/novocaged/salvo_excel')
-# write_xlsx(saldo_serie_port, 'saldo_porto_maranhao.xlsx')
+# setwd('C:/Users/NOVO/Documents/TCC/novocaged/salvo_excel')
+# write_xlsx(saldo_ajustado_port, 'saldo_por_mes_porto_itaqui.xlsx')
