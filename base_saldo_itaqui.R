@@ -1,4 +1,3 @@
-# ESSE ARQUIVO RODA A BASE PORTUÁRIA GERAL DO COMPLEXO PORTUÁRIO MA
 setwd("~/TCC/dados")
 
 ### pasta origem do novocaged: ftp://ftp.mtps.gov.br/pdet/microdados/
@@ -17,9 +16,8 @@ competencias <- c('MOV', 'FOR', 'EXC')
 anos <- 2020:2023 
 meses <- formatC(1:12, width = 2, flag = '0')
 
-# DEFININDO CNAES UTILIZADAS 
-cnaes <- c(5231101,5231102,5231103)
-
+# DEFININDO CNAES UTILIZADAS PARA O PORTO DO ITAQUI
+cnaes <- c(5232000, 5231102, 5211701, 4731800, 3511501)
 
 # MANUSEANDO OS ARQUIVOS ----
 for(k in seq_along(competencias)){
@@ -70,7 +68,7 @@ setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
 # saveRDS(df_for, 'ma_base_for_port.Rds')
 # saveRDS(df_exc, 'ma_base_exc_port.Rds')
 
-rm(cagedexc_baixadas,cagedexc_lista,cagedfor_baixadas,cagedfor_lista,cagedmov_baixadas,cagedmov_lista,arquivos_caged,competencias,k,meses,anos)
+rm(cagedexc_baixadas,cagedexc_lista,cagedfor_baixadas,cagedfor_lista,cagedmov_baixadas,cagedmov_lista,arquivos_caged,competencias,k,meses,anos,cnaes)
 
 # CÁLCULO ATIVIDADE PORTUÁRIA - MARANHÃO ----
 montar_saldo <- function(df){
@@ -105,14 +103,17 @@ saldo_ajustado_port <- left_join(saldo_soma_port, saldo_exc_port,
          idade,racacor,sexo,tamestabjan,tipodedeficiencia,saldo_ajuste,salario)
 rm(saldo_exc_port,saldo_for_port,saldo_mov_port,saldo_soma_port,montar_saldo)
 
-setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
-#saveRDS(saldo_ajustado_port, "ma_base_perfil.Rds")
+# setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
+# saveRDS(saldo_ajustado_port, "ma_base_perfil.Rds")
 
 # Calcular saldo ajustado - serie
 saldo_serie_port <- saldo_ajustado_port |>
   group_by(competenciamov) |>
   arrange(competenciamov) |>
-  summarise(saldo_serie = sum(saldo_ajuste))
+  summarise(saldo_serie = sum(saldo_ajuste),
+            admissoes = sum(saldo_ajuste > 0),
+            desligamentos = sum(saldo_ajuste < 0))
+### CALCULO DE ADM-DESL NÃO BATE COM SALDO  
 
 # Gráfico 
 library(lubridate)
@@ -134,6 +135,5 @@ ggplot(data=saldo_serie_port,
 # ggsave('saldo_portuario_ma.png')
 
 library(writexl)
-setwd('~/TCC/novocaged/salvo_excel')
+# setwd('~/TCC/novocaged/salvo_excel')
 # write_xlsx(saldo_serie_port, 'saldo_porto_maranhao.xlsx')
-
