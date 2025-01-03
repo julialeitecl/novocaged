@@ -105,10 +105,8 @@ saldo_ajustado_port <- left_join(saldo_soma_port, saldo_exc_port,
 
 rm(saldo_exc_port,saldo_for_port,saldo_mov_port,saldo_soma_port,montar_saldo)
 
-# setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
-# saveRDS(saldo_ajustado_port, "ma_base_perfil.Rds")
 
-# Gráfico ----
+## Gráfico ----
 library(lubridate)
 saldo_ajustado_port <- saldo_ajustado_port |>
   mutate(date = ymd(paste0(competenciamov,'01'))) |>
@@ -129,3 +127,34 @@ ggplot(data=saldo_ajustado_port,
 
 # setwd('C:/Users/NOVO/Documents/TCC/novocaged/salvo_excel')
 # write_xlsx(saldo_ajustado_port, 'saldo_por_mes_porto_itaqui.xlsx')
+
+# BASE PARA ANÁLISE DE PERFIL ----
+# juntando linhas de movimentação e fora do prazo
+base_soma_port <- bind_rows(
+  mutate(df_mov, competencia = as.character(competenciamov)),
+  mutate(df_for, competencia = as.character(competenciamov))
+)
+
+nrow(df_mov)+nrow(df_for)-nrow(df_exc)
+
+# exclusão 
+base_filtrada <- base_soma_port |>
+  # join without matches
+  anti_join(df_exc, 
+            by = c("competenciamov","regiao","uf","municipio",
+                   "secao","subclasse","saldomovimentacao",
+                   "cbo2002ocupacao","categoria",
+                   "graudeinstrucao","idade","horascontratuais","racacor","sexo",
+                   "tipoempregador","tipoestabelecimento","tipomovimentacao",
+                   "tipodedeficiencia","indtrabintermitente","indtrabparcial","salario",
+                   "tamestabjan","indicadoraprendiz","origemdainformacao","competenciadec",
+                   "indicadordeforadoprazo","unidadesalariocodigo","valorsalariofixo")) |>
+  # existe 1 a menos do que deveria ser excluído
+  select("competenciamov","municipio","secao","subclasse",        
+         "cbo2002ocupacao","graudeinstrucao","idade","racacor",          
+         "sexo","tipodedeficiencia","salario","saldomovimentacao")
+
+setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
+saveRDS(base_filtrada, "ma_base_perfil.Rds")
+
+rm(base_filtrada,base_soma_port)
