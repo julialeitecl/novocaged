@@ -6,10 +6,10 @@
 ## Saldo Portuário - Maranhão
 <img width="100%" src="/graph/saldo_portuario_ma.png">
 
-## Quadro de Perfil Socioeconômico
+<h1 align="center">Quadro de Perfil Socioeconômico (2020-2023)</h1>
 <img width="100%" src="graph/perfil_port_ma.png"> 
 
-### CNAES 
+### CNAES Utilizadas
 5231-1/02 Atividades do operador portuário
 
 5232000 Atividades de agenciamento marítimo
