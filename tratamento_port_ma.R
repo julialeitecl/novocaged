@@ -4,6 +4,7 @@ library(psych)
 library(RColorBrewer) #cores graph
 library(scales) #uso de formato de número
 library(writexl)
+library(forcats)
 
 # 1 Tratamento e limpeza ----
 setwd('~/TCC/novocaged/memoriaR/portuaria_ma')
@@ -23,7 +24,7 @@ base$mes <- as.numeric(substr(base$competenciamov,5,6))
 
 # limpeza cols
 base <- base |>
-  subset(select = -c(competenciamov,tipodedeficiencia,tamestabjan)) |>
+  subset(select = -c(competenciamov,tipodedeficiencia)) |>
   select(ano,mes,everything())
 
 ## renomear pelo nome das categorias
@@ -33,8 +34,8 @@ dict_cbo <-
   
 base <- base|>
   left_join(dict_cbo, by = c('cbo2002ocupacao' = 'Código')) |>
-  rename(cbonome = Descrição, saldomovimentacao = saldo_ajuste) 
-
+  rename(cbonome = Descrição) 
+rm(dict_cbo)
 View(describe(base))
 
 # 2 Saldo por ano e mes ----
@@ -113,7 +114,7 @@ ggplot(mov_port, aes(x=data, y=saldo, group = 1)) +
 
 ggsave('mov_port_itaqui_serie.png')
 
-# Trabalho mais "destruído e criado" ----
+## Trabalho mais "destruído e criado" 
 # 3.1 Por mês 
 saz_por_cbo_m <- base |>
   group_by(mes, cbonome) |> 
@@ -133,16 +134,19 @@ saz_por_cbo_y <- base |>
 # 4 Perfil do trabalhador médio por anos ----
 # 4.1 Labels ----
   # renomeando variáveis categóricas e criando classes de salário
+  # N/I: Não identificado
 base_perfil <- base |>
   mutate('genero' = case_when((sexo == 1) ~ 'Homem',
                             (sexo == 3) ~ 'Mulher',
+                            (sexo == 9) ~ 'N/I',
                             TRUE ~ NA),
          'cor_raca' = case_when((racacor == 1) ~ 'Branca',
                                 (racacor == 2) ~ 'Preta',
                                 (racacor == 3) ~ 'Parda',
                                 (racacor == 4) ~ 'Amarela',
                                 (racacor == 5) ~ 'Indígena',
-                                (racacor %in% c(6,9)) ~ 'N/A',
+                                (racacor == 6) ~ 'Não informada',
+                                (racacor == 9) ~ 'N/I',
                                 TRUE ~ NA),
          # PROPOSTA DE UNIFICAÇÃO:
          'instrucao' = case_when((graudeinstrucao %in% c(2,3,4)) ~ 'Fundamental Incompleto',
@@ -150,10 +154,9 @@ base_perfil <- base |>
                                  (graudeinstrucao %in% c(7,8)) ~ 'Médio Completo',
                                  (graudeinstrucao == 9) ~ 'Superior Completo',
                                  (graudeinstrucao %in% c(10,11,80)) ~ 'Pós-Graduação Completa',
-                                 (graudeinstrucao %in% c(1,99)) ~ 'N/A', #Não Identificado e analfabetos
+                                 (graudeinstrucao %in% c(1,99)) ~ 'N/I', #Não Identificado e analfabetos
                                  TRUE ~ NA),
          # https://www.dieese.org.br/analisecestabasica/salarioMinimo.html
-         # baseado nas classes de rendimento da SIS
          # salario != valorsalariofixo 
          'faixa_salarial' = case_when((ano == 2020 & mes == 1 & salario <= 1039) ~ '<1SM',
                                       (ano == 2020 & mes == 1 & salario > 1039 & salario <= 3*1039) ~ '1-3SM',
@@ -192,79 +195,116 @@ base_perfil <- base |>
                                       (ano == 2023 & mes >= 5 & salario > 10*1320) ~ '>10SM'
                                       )
          ) |>
-  select(ano,genero,cor_raca,instrucao,cbonome,faixa_salarial,salario)
+  select(ano,genero,cor_raca,instrucao,cbo2002ocupacao,cbonome,faixa_salarial,salario)
+
+# limpeza no salário
+base_perfil <- na.omit(base_perfil)
 
 # 4.2 Descritivas por ano ----
 # obs: rodar dev.off() em caso de estado gráfico inválido
 # paletas: display.brewer.all()
   # Gênero
 table(base_perfil$genero,base_perfil$ano)
-x1<-ggplot(base_perfil, aes(x=ano)) + 
-  geom_bar(aes(fill = as.factor(genero)),position = "fill") +
-  ggtitle("Distribuição dos trabalhadores por gênero e ano") +
+x1<-ggplot(base_perfil, 
+       aes(x = fct_rev(fct_infreq(genero)), # reordenar pelos valores
+           fill = genero)) + 
+  geom_bar() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Gênero") + 
+  ylab("Contagem") +
+  labs(title = 'Distribuição dos trabalhadores por gênero (2020-2023)') +
   theme_bw(base_size = 12) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  scale_fill_discrete(name="Gênero") 
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none")
 
   # Cor/Raça
 table(base_perfil$cor_raca,base_perfil$ano)
-x2<-ggplot(base_perfil, aes(x=ano)) + 
-  geom_bar(aes(fill = as.factor(cor_raca)),position = "fill") +
-  ggtitle("Distribuição dos trabalhadores por cor/raça e ano") +
+x2<-ggplot(base_perfil, 
+       aes(x = fct_rev(fct_infreq(cor_raca)), # reordenar pelos valores
+           fill = cor_raca)) + 
+  geom_bar() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Cor/raça") + 
+  ylab("Contagem") +
+  labs(title = 'Distribuição dos trabalhadores por cor/raça (2020-2023)') +
   theme_bw(base_size = 12) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  scale_fill_discrete(name="Cor/Raça",
-                      breaks=c('Amarela','Branca','Indígena','Parda','Preta','N/A'))
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none")
 
   # Escolaridade
-table(base_perfil$instrucao,base_perfil$ano)
-x3<-ggplot(base_perfil, aes(x=ano)) + 
-  geom_bar(aes(fill = as.factor(instrucao)),position = "fill") +
-  labs(title = 'Distribuição dos trabalhadores por escolaridade e ano') +
+table(base_perfil$instrucao)
+round(prop.table(table(base_perfil$instrucao))*100, 2)
+x3 <- ggplot(base_perfil, 
+       aes(x = fct_rev(fct_infreq(instrucao)), # reordenar pelos valores
+           fill = instrucao)) + 
+  geom_bar() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Escolaridade") + 
+  ylab("Contagem") +
+  labs(title = 'Distribuição dos trabalhadores por escolaridade (2020-2023)') +
   theme_bw(base_size = 12) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  scale_fill_discrete(name="Escolaridade",
-                      breaks=c('Fundamental Incompleto','Fundamental Completo',
-                               'Médio Completo', 'Superior Completo',
-                               'Pós-Graduação Completa', 'N/A'))
-
-  # Ocupação do trabalhador
-View(table(base_perfil$cbonome,base_perfil$ano))
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none")
 
   # Salário
-table(base_perfil$faixa_salarial,base_perfil$ano)
-x4<-ggplot(base_perfil, aes(x=ano)) + 
-  geom_bar(aes(fill = as.factor(faixa_salarial)),position = "fill") +
-  labs(title = 'Distribuição dos trabalhadores por faixa salarial (SM) e ano') +
+table(base_perfil$faixa_salarial)
+x4<- ggplot(base_perfil, 
+               aes(x = fct_rev(fct_infreq(faixa_salarial)), # reordenar pelos valores
+                   fill = faixa_salarial)) + 
+  geom_bar() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set1") +
+  xlab("Faixa salarial") + 
+  ylab("Contagem") +
+  labs(title = 'Distribuição dos trabalhadores por faixa salarial (SM) (2020-2023)') +
   theme_bw(base_size = 12) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  scale_fill_discrete(name="Faixa Salarial (SM)",
-                      breaks=c('<1SM','1-3SM','3-5SM','5-10SM','>10SM'))
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none")
   
 library(patchwork)
 quadro<-x1+x2+x3+x4
+quadro
 setwd("~/TCC/novocaged/graph")
 ggsave('perfil_port_ma.png')
 
-    # histograma de salários menores que 30.000
+# Salário médio 
+# concentração dos valores
+Q1 <- quantile(base$salario, probs = 0.25, na.rm = T)
+Q2 <- quantile(base$salario, probs = 0.50, na.rm = T) # mediana
+Q3 <- quantile(base$salario, probs = 0.75, na.rm = T)
+# histograma de salários menores que 10.000
 ggplot(base,
        aes(x=salario)) + 
   geom_histogram() +
-  xlim(0, 30000)
-    # concentração dos valores
-Q1 <- quantile(base$salario, probs = 0.25)
-Q2 <- quantile(base$salario, probs = 0.50) # mediana
-Q3 <- quantile(base$salario, probs = 0.75)
+  xlim(0, 10000)
 
-# Salário médio 
   # para cada nível de instrução
-  View(data.frame(tapply(base_perfil$salario, base_perfil$instrucao, mean)))
+  base_perfil |>
+    filter(!is.na(salario), !is.na(instrucao)) |>
+    group_by(instrucao) |>
+    summarise(mean_salario = mean(salario)) |>
+    View()
+    
   # por gênero
-  View(data.frame(tapply(base_perfil$salario, base_perfil$genero, mean)))
-  # por cor/raça
-  View(data.frame(tapply(base_perfil$salario, base_perfil$cor_raca, mean)))
-  # por cor/raça e gênero
-  View(data.frame(tapply(base_perfil$salario, 
-                         list(base_perfil$cor_raca,base_perfil$genero), 
-                         mean)))
+  base_perfil |>
+    filter(!is.na(salario), !is.na(genero)) |>
+    group_by(genero) |>
+    summarise(mean_salario = mean(salario)) |>
+    View()
 
+  # por cor/raça
+  base_perfil |>
+    filter(!is.na(salario), !is.na(cor_raca)) |>
+    group_by(cor_raca) |>
+    summarise(mean_salario = mean(salario)) |>
+    View()
+  
+  # por cor/raça e gênero
+  base_perfil |>
+    filter(!is.na(salario), !is.na(genero), !is.na(cor_raca)) |>
+    group_by(genero,cor_raca) |>
+    summarise(mean_salario = mean(salario)) |>
+    View()
