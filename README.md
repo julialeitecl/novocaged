@@ -6,9 +6,6 @@
 ## Saldo Portuário - Maranhão
 <img width="100%" src="/graph/saldo_portuario_ma.png">
 
-## Quadro de Perfil Socioeconômico
-<img width="100%" src="graph/perfil_port_ma.png"> 
-
 ### CNAES 
 5231-1/02 Atividades do operador portuário
 
