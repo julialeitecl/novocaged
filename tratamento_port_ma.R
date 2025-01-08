@@ -195,16 +195,28 @@ base_perfil <- base |>
                                       (ano == 2023 & mes >= 5 & salario > 10*1320) ~ '>10SM'
                                       )
          ) |>
-  select(ano,genero,cor_raca,instrucao,cbo2002ocupacao,cbonome,faixa_salarial,salario)
+  select(ano,genero,cor_raca,instrucao,cbo2002ocupacao,cbonome,faixa_salarial,salario,saldomovimentacao)
 
 # limpeza no salário
 base_perfil <- na.omit(base_perfil)
 
-# 4.2 Descritivas por ano ----
+setwd("~/TCC/novocaged/memoriaR")
+saveRDS(base_perfil, 'ma_base_perfil_tratada.Rds')
+
+# 4.2 Descritivas ----
 # obs: rodar dev.off() em caso de estado gráfico inválido
 # paletas: display.brewer.all()
+  # Saldo de movimentação
+table(base_perfil$saldomovimentacao)
+
   # Gênero
-table(base_perfil$genero,base_perfil$ano)
+abs_gen<-table(base_perfil$genero)
+rel_gen<-round(prop.table(table(base_perfil$genero))*100, 1)
+gen_tab <- data.frame(
+  Categ = names(abs_gen),
+  Frequencia = as.numeric(abs_gen),
+  Proporcao = as.numeric(rel_gen)) 
+
 x1<-ggplot(base_perfil, 
        aes(x = fct_rev(fct_infreq(genero)), # reordenar pelos valores
            fill = genero)) + 
@@ -219,7 +231,13 @@ x1<-ggplot(base_perfil,
         legend.position = "none")
 
   # Cor/Raça
-table(base_perfil$cor_raca,base_perfil$ano)
+abs_cor<-table(base_perfil$cor_raca)
+rel_cor<-round(prop.table(table(base_perfil$cor_raca))*100, 1)
+cor_tab <- data.frame(
+  Categ = names(abs_cor),
+  Frequencia = as.numeric(abs_cor),
+  Proporcao = as.numeric(rel_cor)) 
+
 x2<-ggplot(base_perfil, 
        aes(x = fct_rev(fct_infreq(cor_raca)), # reordenar pelos valores
            fill = cor_raca)) + 
@@ -234,8 +252,13 @@ x2<-ggplot(base_perfil,
         legend.position = "none")
 
   # Escolaridade
-table(base_perfil$instrucao)
-round(prop.table(table(base_perfil$instrucao))*100, 2)
+abs_escol<-table(base_perfil$instrucao)
+rel_escol<-round(prop.table(table(base_perfil$instrucao))*100, 1)
+escol_tab <- data.frame(
+  Categ = names(abs_escol),
+  Frequencia = as.numeric(abs_escol),
+  Proporcao = as.numeric(rel_escol)) 
+
 x3 <- ggplot(base_perfil, 
        aes(x = fct_rev(fct_infreq(instrucao)), # reordenar pelos valores
            fill = instrucao)) + 
@@ -250,7 +273,12 @@ x3 <- ggplot(base_perfil,
         legend.position = "none")
 
   # Salário
-table(base_perfil$faixa_salarial)
+abs_sal<-table(base_perfil$faixa_salarial)
+rel_sal<-round(prop.table(table(base_perfil$faixa_salarial))*100, 1)
+sal_tab <- data.frame(
+  Categ = names(abs_sal),
+  Frequencia = as.numeric(abs_sal),
+  Proporcao = as.numeric(rel_sal))
 x4<- ggplot(base_perfil, 
                aes(x = fct_rev(fct_infreq(faixa_salarial)), # reordenar pelos valores
                    fill = faixa_salarial)) + 
