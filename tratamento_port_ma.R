@@ -27,8 +27,8 @@ base <- base |>
   subset(select = -c(competenciamov,tipodedeficiencia)) |>
   select(ano,mes,everything())
 
-## renomear pelo nome das categorias
-setwd("~/TCC/novocaged")
+## renomear pelo nome das categorias na CBO
+setwd("~/TCC/novocaged/documentacao")
 dict_cbo <-
   readxl::read_excel("dicionario.xlsx", sheet = 'cbo2002ocupação')
   
@@ -36,7 +36,12 @@ base <- base|>
   left_join(dict_cbo, by = c('cbo2002ocupacao' = 'Código')) |>
   rename(cbonome = Descrição) 
 rm(dict_cbo)
-View(describe(base))
+
+estrutura_cbo <-
+  readxl::read_excel("estrutura_cbo.xlsx", sheet = 'estrutura')
+base <- base |>
+  left_join(estrutura_cbo, by = c('cbo2002ocupacao' = 'ocupacao')) 
+rm(estrutura_cbo)
 
 # 2 Saldo por ano e mes ----
 saldo_por_ano <- base |>
@@ -195,7 +200,9 @@ base_perfil <- base |>
                                       (ano == 2023 & mes >= 5 & salario > 10*1320) ~ '>10SM'
                                       )
          ) |>
-  select(ano,genero,cor_raca,instrucao,cbo2002ocupacao,cbonome,faixa_salarial,salario,saldomovimentacao)
+  select(ano,genero,cor_raca,instrucao,faixa_salarial,salario,saldomovimentacao,
+         cbo2002ocupacao,cbonome,grande_grupo,nome_grande_grupo,sub_principal,
+         nome_sub_principal,subgrupo,nome_subgrupo,familia,nome_familia)
 
 # limpeza no salário
 base_perfil <- na.omit(base_perfil)
