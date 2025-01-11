@@ -1,37 +1,60 @@
 library(tidyverse)
 library(readxl)
-library(psych)
-library(scales) #uso de formato de número
 library(writexl)
+library(tidytable)
+library(stats)
 
 # 1 Tratamento e limpeza ----
-setwd('~/TCC/novocaged/memoriaR/portuaria_ma')
-df <- readRDS('ma_base_perfil.Rds')
+setwd("~/TCC/novocaged/memoriaR")
+data <- readRDS('ma_base_perfil_tratada.Rds')
 
 # limpeza do df
-df <- subset(df, select = c('sexo','racacor','graudeinstrucao',
-                            'cbo2002ocupacao','salario','saldomovimentacao'))
+df <- subset(data, select = c('genero','cor_raca','instrucao',
+                            'faixa_salarial','saldomovimentacao',
+                            'grande_grupo','tipo_trab'))
 
-# remover NA em salário
-colSums(is.na(df))
-df <- na.omit(df)
+df <- df |>
+  mutate('saldo' = case_when(saldomovimentacao == 1 ~ 'Admitidos',
+                             saldomovimentacao == -1 ~ 'Desligados',
+                             TRUE ~ NA)) |>
+  select(-saldomovimentacao)
 
-# 2 Correlação ----
-knitr::kable(cor(df))
-pairs(df)
+# 2 Dummies ----
+dummies <- get_dummies(df)
+dummies <- dummies |>
+  select()
 
-# Frequência
-prop.table(table(df$sexo))*100
-prop.table(table(df$racacor))*100
-round(prop.table(table(df$graudeinstrucao))*100, 2)
-prop.table(table(df$saldomovimentacao))*100
+#INDEPENDENTES
+#genero:    Homem
+#cor/raça:  Branca 
+#           Parda
+#           Preta
+#           Amarela
+#           Indígena
+#escolaridade: 
+#           Médio Completo
+#           Fundamental Completo
+#           Superior Completo
+#           Fundamental Incompleto
+#           Pós-Graduação Completa
+#salario:   <1SM 
+#           1-3SM
+#           3-5SM
+#           5-10SM
+#saldo: 1 Admitidos
 
-# DUMMIES
-#genero
+#DEPENDENTE: ocupação (cbo)
 
-#cor/raça
+dummies <- dummies |> 
+  select(genero_Homem,
+         cor_raca_Branca,cor_raca_Parda,cor_raca_Preta,cor_raca_Amarela,cor_raca_Indígena,
+         `instrucao_Médio Completo`,`instrucao_Fundamental Completo`,`instrucao_Superior Completo`,`instrucao_Fundamental Incompleto`,`instrucao_Pós-Graduação Completa`,
+         `faixa_salarial_<1SM`,`faixa_salarial_1-3SM`,`faixa_salarial_3-5SM`,`faixa_salarial_5-10SM`,
+         saldo_Admitidos,
+         tipo_trab_manual)
 
-#escolaridade
+model <- glm(tipo_trab_manual ~ genero_Homem, 
+             family = binomial(link = "logit"), data = dummies)
 
-#salario
+summary(model)
 
