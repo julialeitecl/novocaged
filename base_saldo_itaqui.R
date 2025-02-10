@@ -1,4 +1,5 @@
 # EXTRAI A BASE ESPECIFICAMENTE PARA O PORTO DO ITAQUI PELAS CNAES SELECIONADAS DE ATUACAO DO PORTO
+## para os anos de 2020-2024 (jan-dez)
 
 ### pasta origem do novocaged: ftp://ftp.mtps.gov.br/pdet/microdados/
 setwd("~/TCC/dados")
@@ -14,11 +15,28 @@ library(writexl)
 
 # DEFININDO COMPETÊNCIAS E PERÍODO -----
 competencias <- c('MOV', 'FOR', 'EXC')
-anos <- 2020:2023 
+anos <- 2020:2024
 meses <- formatC(1:12, width = 2, flag = '0')
 
 # DEFININDO CNAES UTILIZADAS PARA O PORTO DO ITAQUI
-cnaes <- c(5232000, 5231102, 5211701, 4731800, 3511501)
+## cluster Itaqui
+## cnaes <- c(5232000, 5231102, 5211701, 4731800, 3511501)
+## cluster portuário ma - Itaqui
+## cnaes <- c(5231101,5231102,5231103)
+cnaes <- c(5231101,5231103,5232000, 5231102, 5211701, 4731800, 3511501)
+
+# Utilizar para extrair dados de cada pasta (anomes) e colocar em uma pasta só
+# library(fs)
+# pasta <- 'C:/Users/NOVO/Documents/TCC/dados'
+# 
+# for (ano in anos){
+#   for (mes in meses){
+#     print(paste0(ano,mes))
+#     arquivos <- dir_ls(paste0(pasta,'/',ano,'/',ano,mes), recurse = TRUE)
+#     for (arquivo in arquivos){
+#       file.copy(arquivo, path(pasta, path_file(arquivo)))
+#     }}}
+
 
 # MANUSEANDO OS ARQUIVOS ----
 for(k in seq_along(competencias)){
@@ -63,6 +81,7 @@ arquivos_caged <- function(entrada) {
 df_mov <- arquivos_caged('MOV')
 df_for <- arquivos_caged('FOR')
 df_exc <- arquivos_caged('EXC')
+
 
 setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
 # saveRDS(df_mov, 'ma_base_mov_port.Rds')
