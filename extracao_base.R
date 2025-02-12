@@ -15,7 +15,7 @@ library(writexl)
 
 # DEFININDO COMPETÊNCIAS E PERÍODO -----
 competencias <- c('MOV', 'FOR', 'EXC')
-anos <- 2020:2021
+anos <- 2020:2024
 meses <- formatC(1:12, width = 2, flag = '0')
 
 # DEFININDO CNAES UTILIZADAS PARA O PORTO DO ITAQUI
@@ -25,7 +25,7 @@ meses <- formatC(1:12, width = 2, flag = '0')
 ## cnaes <- c(5231101,5231102,5231103)
 cnaes <- c(5231101,5231103,5232000, 5231102, 5211701, 4731800, 3511501)
 
-# Utilizar para extrair dados de cada pasta (nomes) e colocar em uma pasta só
+# Utilizar para extrair dados de cada pasta (anomes) e colocar em uma pasta só
 # library(fs)
 # pasta <- 'C:/Users/NOVO/Documents/TCC/dados'
 # 
