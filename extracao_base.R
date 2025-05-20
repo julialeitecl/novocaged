@@ -23,13 +23,20 @@ meses <- formatC(1:12, width = 2, flag = '0')
   # 5232000 – Atividade de Agenciamento Marítimo
   # 5231102 – Atividade do Operador Portuário
   # 5211701 – Armazenagem Gerais  emissão de warrant
-## cluster portuário ma 
+## resto do complexo portuário ma 
 ## cnaes <- c(5231101,5231103, 4731800, 3511501)
   # 5231101 – Administração da Infraestrutura Portuária
   # 5212500 – Carga e Descarga
   # 5231103 – Gestão de Terminais Aquaviários
   # 5239701 – Serviços de Praticagem
-cnaes <- c(5231102,5232000,5211701,5231101,4731800,3511501,5231103,5212500,5239701)
+  # 5239799 - Atividades Auxiliares dos Transportes Aquaviários não Especificadas Anteriormente
+  # 5030101 - Navegação de Apoio Marítimo
+  # 5030102 - Navegação de Apoio Portuário
+  # 5099801 - Transporte Aquaviário para Passeios Turísticos
+  # 5099899 - Outros Transportes Aquaviários não Especificados Anteriormente
+cnaes <- c(5231102,5232000,5211701,
+           5231101,4731800,3511501,5231103,5212500,5239701,
+           5239799,5030101,5030102,5099801,5099899)
   
 # Utilizar para extrair dados de cada pasta (anomes) e colocar em uma pasta só
 # library(fs)

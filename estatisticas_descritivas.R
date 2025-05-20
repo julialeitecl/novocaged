@@ -54,8 +54,8 @@ saldo_por_mes <- base |>
   group_by(ano,mes) |>
   summarise(saldo = sum(saldomovimentacao))
 
-# 3 Sazonalidade ----
-## Saldo
+# 3 Sazonalidade e saldo geral ----
+## Saldo de movimentação de trabalhadores
 ggplot(saldo_por_mes, aes(x = mes, y = saldo, color = factor(ano), group = ano)) +
   geom_line(size = 1) +
   scale_x_continuous(breaks = seq(1, 12, by = 1)) + 
@@ -65,6 +65,12 @@ ggplot(saldo_por_mes, aes(x = mes, y = saldo, color = factor(ano), group = ano))
   theme_bw(base_size = 10) +
   theme(plot.title = element_text(hjust = 0.5)) +
   labs(color="Anos") 
+
+## Admitidos
+
+
+## Desligados
+
 
 ## Movimentação portuária
 setwd('~/TCC/novocaged')
