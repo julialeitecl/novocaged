@@ -10,6 +10,8 @@ library(forcats)
 setwd('~/TCC/novocaged/memoriaR/portuaria_ma')
 base <- readRDS('ma_base_perfil.Rds')
 
+base <- subset(base, subclasse %in% c(5211701, 5231102, 5232000))
+
 View(describe(base))
 unique(base$municipio)
 
@@ -242,23 +244,23 @@ base_perfil <- base |>
                                                         950110,950205,950305,992205) 
                                  ~ 'nao_manual',
                                  cbo2002ocupacao == 999999 ~ 'nao_identificado',
-                                 TRUE ~ NA),
+                                 TRUE ~ NA)
          # cnaes cluster itaqui: c(5232000, 5231102, 5211701, 4731800, 3511501)
          # complexo portuário restante: c(5231101,5231102,5231103)
          # separação de cnae 5231102 entre a divisão?
-         'itaqui' = case_when(subclasse %in% c(5232000, 5231102, 5211701, 4731800, 3511501) ~ 'cluster',
-                              subclasse %in% c(5231101,5231102,5231103) ~ 'restante')
+         # 'itaqui' = case_when(subclasse %in% c(5232000, 5231102, 5211701, 4731800, 3511501) ~ 'cluster',
+         #                      subclasse %in% c(5231101,5231102,5231103) ~ 'restante')
          ) |>
   select(ano,genero,cor_raca,instrucao,faixa_salarial,salario,saldomovimentacao,
-         tipo_trab,itaqui,
+         tipo_trab,
          cbo2002ocupacao,cbonome,grande_grupo,nome_grande_grupo,sub_principal,
          nome_sub_principal,subgrupo,nome_subgrupo,familia,nome_familia)
 
 # limpeza no salário
 base_perfil <- na.omit(base_perfil)
 
-setwd("~/TCC/novocaged/memoriaR")
-saveRDS(base_perfil, 'ma_base_perfil_tratada.Rds')
+# setwd("~/TCC/novocaged/memoriaR")
+# saveRDS(base_perfil, 'ma_base_perfil_tratada.Rds')
 
 ## 5.2 Descritivas ----
 # obs: rodar dev.off() em caso de estado gráfico inválido
@@ -274,18 +276,24 @@ gen_tab <- data.frame(
   Frequencia = as.numeric(abs_gen),
   Proporcao = as.numeric(rel_gen)) 
 
-x1<-ggplot(base_perfil, 
+ggplot(base_perfil, 
        aes(x = fct_rev(fct_infreq(genero)), # reordenar pelos valores
            fill = genero)) + 
-  geom_bar() +
+  geom_bar(stat = "count") +  # usará a contagem das barras
+  geom_text(aes(label = ..count..), 
+            stat = "count", 
+            hjust = -0.2, # Ajuste para posicionar o rótulo fora da barra
+            color = "black", # Cor preta para o texto
+            fontface = "bold") + # Deixar o texto em negrito
   coord_flip() +
   scale_fill_brewer(palette = "Set1") +
   xlab("Gênero") + 
   ylab("Contagem") +
   labs(title = 'Distribuição dos trabalhadores por gênero (2020-2023)') +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 14) +
   theme(plot.title = element_text(hjust = 0.5),
         legend.position = "none")
+
 
   # Cor/Raça
 abs_cor<-table(base_perfil$cor_raca)
@@ -295,18 +303,24 @@ cor_tab <- data.frame(
   Frequencia = as.numeric(abs_cor),
   Proporcao = as.numeric(rel_cor)) 
 
-x2<-ggplot(base_perfil, 
+ggplot(base_perfil, 
        aes(x = fct_rev(fct_infreq(cor_raca)), # reordenar pelos valores
            fill = cor_raca)) + 
-  geom_bar() +
+  geom_bar(stat = "count") +  # usará a contagem das barras
+  geom_text(aes(label = ..count..), 
+            stat = "count", 
+            hjust = -0.2, # Ajuste para posicionar o rótulo fora da barra
+            color = "black", # Cor preta para o texto
+            fontface = "bold") + # Deixar o texto em negrito
   coord_flip() +
   scale_fill_brewer(palette = "Set1") +
   xlab("Cor/raça") + 
   ylab("Contagem") +
   labs(title = 'Distribuição dos trabalhadores por cor/raça (2020-2023)') +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 16) +
   theme(plot.title = element_text(hjust = 0.5),
         legend.position = "none")
+
 
   # Escolaridade
 abs_escol<-table(base_perfil$instrucao)
@@ -316,18 +330,24 @@ escol_tab <- data.frame(
   Frequencia = as.numeric(abs_escol),
   Proporcao = as.numeric(rel_escol)) 
 
-x3 <- ggplot(base_perfil, 
+ggplot(base_perfil, 
        aes(x = fct_rev(fct_infreq(instrucao)), # reordenar pelos valores
            fill = instrucao)) + 
-  geom_bar() +
+  geom_bar(stat = "count") +  # usará a contagem das barras
+  geom_text(aes(label = ..count..), 
+            stat = "count", 
+            hjust = -0.2, # Ajuste para posicionar o rótulo fora da barra
+            color = "black", # Cor preta para o texto
+            fontface = "bold") + # Deixar o texto em negrito
   coord_flip() +
   scale_fill_brewer(palette = "Set1") +
   xlab("Escolaridade") + 
   ylab("Contagem") +
   labs(title = 'Distribuição dos trabalhadores por escolaridade (2020-2023)') +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 16) +
   theme(plot.title = element_text(hjust = 0.5),
         legend.position = "none")
+
 
   # Salário
 abs_sal<-table(base_perfil$faixa_salarial)
@@ -336,19 +356,27 @@ sal_tab <- data.frame(
   Categ = names(abs_sal),
   Frequencia = as.numeric(abs_sal),
   Proporcao = as.numeric(rel_sal))
-x4<- ggplot(base_perfil, 
-               aes(x = fct_rev(fct_infreq(faixa_salarial)), # reordenar pelos valores
-                   fill = faixa_salarial)) + 
-  geom_bar() +
+
+
+ggplot(base_perfil, 
+       aes(x = fct_rev(fct_infreq(faixa_salarial)), # reordenar pelos valores
+           fill = faixa_salarial)) + 
+  geom_bar(stat = "count") +  # usará a contagem das barras
+  geom_text(aes(label = ..count..), 
+            stat = "count", 
+            hjust = -0.2, # Ajuste para posicionar o rótulo fora da barra
+            color = "black", # Cor preta para o texto
+            fontface = "bold") + # Deixar o texto em negrito
   coord_flip() +
   scale_fill_brewer(palette = "Set1") +
   xlab("Faixa salarial") + 
   ylab("Contagem") +
   labs(title = 'Distribuição dos trabalhadores por faixa salarial (SM) (2020-2023)') +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 16) +
   theme(plot.title = element_text(hjust = 0.5),
         legend.position = "none")
-  
+
+
 library(patchwork)
 quadro<-x1+x2+x3+x4
 quadro
