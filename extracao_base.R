@@ -4,8 +4,7 @@
 ### pasta origem do novocaged: ftp://ftp.mtps.gov.br/pdet/microdados/
 setwd("~/TCC/dados")
 
-# RODAR
-# PACOTES ----
+# RODAR PACOTES ----
 library(tidyverse)
 library(archive)
 library(readr)
@@ -20,11 +19,18 @@ meses <- formatC(1:12, width = 2, flag = '0')
 
 # DEFININDO CNAES UTILIZADAS PARA O PORTO DO ITAQUI
 ## cluster Itaqui
-## cnaes <- c(5232000, 5231102, 5211701, 4731800, 3511501)
-## cluster portuário ma - Itaqui
-## cnaes <- c(5231101,5231102,5231103)
-cnaes <- c(5231101,5231103,5232000, 5231102, 5211701, 4731800, 3511501)
-
+## cnaes <- c(5232000, 5231102, 5211701)
+  # 5232000 – Atividade de Agenciamento Marítimo
+  # 5231102 – Atividade do Operador Portuário
+  # 5211701 – Armazenagem Gerais  emissão de warrant
+## cluster portuário ma 
+## cnaes <- c(5231101,5231103, 4731800, 3511501)
+  # 5231101 – Administração da Infraestrutura Portuária
+  # 5212500 – Carga e Descarga
+  # 5231103 – Gestão de Terminais Aquaviários
+  # 5239701 – Serviços de Praticagem
+cnaes <- c(5231102,5232000,5211701,5231101,4731800,3511501,5231103,5212500,5239701)
+  
 # Utilizar para extrair dados de cada pasta (anomes) e colocar em uma pasta só
 # library(fs)
 # pasta <- 'C:/Users/NOVO/Documents/TCC/dados'
@@ -82,7 +88,6 @@ df_mov <- arquivos_caged('MOV')
 df_for <- arquivos_caged('FOR')
 df_exc <- arquivos_caged('EXC')
 
-
 setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
 # saveRDS(df_mov, 'ma_base_mov_port.Rds')
 # saveRDS(df_for, 'ma_base_for_port.Rds')
@@ -103,6 +108,7 @@ saldo_mov_port <- montar_saldo(df_mov)
 saldo_for_port <- montar_saldo(df_for)
 saldo_exc_port <- montar_saldo(df_exc)
 
+# SALDO ----
 # Somar os saldos de movimentação e fora do prazo pela competência
 saldo_soma_port <- bind_rows(
   mutate(saldo_mov_port, competencia = as.character(competenciamov)),
@@ -132,14 +138,15 @@ saldo_ajustado_port <- saldo_ajustado_port |>
   mutate(data = format(date, "%Y/%m")) |>
   subset(select = -c(date))
 
-ggplot(data=saldo_ajustado_port,
-       mapping = aes(x=data, y=saldo_ajuste)) +
-  geom_bar(stat = 'identity') +
+ggplot(data = saldo_ajustado_port,
+       mapping = aes(x = data, y = saldo_ajuste, group = 1)) +
+  geom_line() +  # Modificado para gráfico de linha
   labs(x = "ano/mês", y = "saldo ajustado") +
   ggtitle('Saldo de Empregos no Porto do Itaqui - Maranhão') +
   theme_bw(base_size = 10) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-        plot.title = element_text(hjust = 0.5)) 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
 
 # setwd("~/TCC/novocaged/graph")
 # ggsave('saldo_portuario_ma.png')
@@ -174,6 +181,7 @@ base_filtrada <- base_soma_port |>
          "sexo","tipodedeficiencia","salario","saldomovimentacao")
 
 setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
-saveRDS(base_filtrada, "ma_base_perfil.Rds")
+saveRDS(base_filtrada, "ma_base_trabalhadores_itaqui.Rds")
+saveRDS(base_filtrada, "ma_base_outros_trabalhadores_complexo.Rds")
 
 rm(base_filtrada,base_soma_port)
