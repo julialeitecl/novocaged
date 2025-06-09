@@ -24,7 +24,7 @@ meses <- formatC(1:12, width = 2, flag = '0')
   # 5231102 – Atividade do Operador Portuário
   # 5211701 – Armazenagem Gerais  emissão de warrant
 ## resto do complexo portuário ma 
-## cnaes <- c(5231101,5231103, 4731800, 3511501)
+## cnaes <- c(5231101,5231103)
   # 5231101 – Administração da Infraestrutura Portuária
   # 5212500 – Carga e Descarga
   # 5231103 – Gestão de Terminais Aquaviários
@@ -35,10 +35,10 @@ meses <- formatC(1:12, width = 2, flag = '0')
   # 5099801 - Transporte Aquaviário para Passeios Turísticos
   # 5099899 - Outros Transportes Aquaviários não Especificados Anteriormente
 cnaes <- c(5231102,5232000,5211701,
-           5231101,4731800,3511501,5231103,5212500,5239701,
+           5231101,5231103,5212500,5239701,
            5239799,5030101,5030102,5099801,5099899)
   
-# Utilizar para extrair dados de cada pasta (anomes) e colocar em uma pasta só
+# Utilizar para extrair dados de cada pasta (nomes) e colocar em uma pasta só
 # library(fs)
 # pasta <- 'C:/Users/NOVO/Documents/TCC/dados'
 # 
@@ -95,7 +95,7 @@ df_mov <- arquivos_caged('MOV')
 df_for <- arquivos_caged('FOR')
 df_exc <- arquivos_caged('EXC')
 
-setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
+# setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
 # saveRDS(df_mov, 'ma_base_mov_port.Rds')
 # saveRDS(df_for, 'ma_base_for_port.Rds')
 # saveRDS(df_exc, 'ma_base_exc_port.Rds')
@@ -159,7 +159,7 @@ ggplot(data = saldo_ajustado_port,
 # ggsave('saldo_portuario_ma.png')
 
 # setwd('C:/Users/NOVO/Documents/TCC/novocaged/salvo_excel')
-# write_xlsx(saldo_ajustado_port, 'saldo_por_mes_porto_itaqui.xlsx')
+# write_xlsx(saldo_ajustado_port, 'saldo_por_mes_portuario_ma.xlsx')
 
 # BASE PARA ANÁLISE DE PERFIL ----
 # juntando linhas de movimentação e fora do prazo
@@ -188,7 +188,6 @@ base_filtrada <- base_soma_port |>
          "sexo","tipodedeficiencia","salario","saldomovimentacao")
 
 setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
-saveRDS(base_filtrada, "ma_base_trabalhadores_itaqui.Rds")
-saveRDS(base_filtrada, "ma_base_outros_trabalhadores_complexo.Rds")
+saveRDS(base_filtrada, "ma_base_trabalhadores_portuarios.Rds")
 
 rm(base_filtrada,base_soma_port)

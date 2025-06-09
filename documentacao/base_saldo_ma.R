@@ -1,11 +1,10 @@
-# EXTRAI A BASE ESPECIFICAMENTE PARA O PORTO DO ITAQUI PELAS CNAES SELECIONADAS DE ATUACAO DO PORTO
+# EXTRAIR SALDO MARANHÃO GERAL 
 ## para os anos de 2020-2024 (jan-dez)
 
 ### pasta origem do novocaged: ftp://ftp.mtps.gov.br/pdet/microdados/
 setwd("~/TCC/dados")
 
-# RODAR
-# PACOTES ----
+# RODAR PACOTES ----
 library(tidyverse)
 library(archive)
 library(readr)
@@ -15,15 +14,8 @@ library(writexl)
 
 # DEFININDO COMPETÊNCIAS E PERÍODO -----
 competencias <- c('MOV', 'FOR', 'EXC')
-anos <- 2020:2021
+anos <- 2020:2024
 meses <- formatC(1:12, width = 2, flag = '0')
-
-# DEFININDO CNAES UTILIZADAS PARA O PORTO DO ITAQUI
-## cluster Itaqui
-## cnaes <- c(5232000, 5231102, 5211701, 4731800, 3511501)
-## cluster portuário ma - Itaqui
-## cnaes <- c(5231101,5231102,5231103)
-cnaes <- c(5231101,5231103,5232000, 5231102, 5211701, 4731800, 3511501)
 
 # Utilizar para extrair dados de cada pasta (nomes) e colocar em uma pasta só
 # library(fs)
@@ -64,7 +56,7 @@ arquivos_caged <- function(entrada) {
         ' | loop', l, 'de', length(caminho_dos_arquivos), '\n')
     arquivo <- readr::read_csv2(archive::archive_read(caminho_dos_arquivos[l])) |>
       janitor::clean_names() %>%
-      filter(uf == 21 & subclasse %in% cnaes) |>
+      filter(uf == 21) |>
       mutate(salario = as.numeric(salario),
              horascontratuais = as.numeric(horascontratuais),
              valorsalariofixo = as.numeric(valorsalariofixo))
@@ -82,13 +74,7 @@ df_mov <- arquivos_caged('MOV')
 df_for <- arquivos_caged('FOR')
 df_exc <- arquivos_caged('EXC')
 
-
-setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
-# saveRDS(df_mov, 'ma_base_mov_port.Rds')
-# saveRDS(df_for, 'ma_base_for_port.Rds')
-# saveRDS(df_exc, 'ma_base_exc_port.Rds')
-
-rm(cagedexc_baixadas,cagedexc_lista,cagedfor_baixadas,cagedfor_lista,cagedmov_baixadas,cagedmov_lista,arquivos_caged,competencias,k,meses,anos,cnaes)
+rm(cagedexc_baixadas,cagedexc_lista,cagedfor_baixadas,cagedfor_lista,cagedmov_baixadas,cagedmov_lista,arquivos_caged,competencias,k,meses,anos)
 
 # CÁLCULO DE ADMITIDOS, DESLIGADOS E SALDO DO PORTO DO ITAQUI - MARANHÃO ----
 montar_saldo <- function(df){
@@ -136,44 +122,13 @@ ggplot(data=saldo_ajustado_port,
        mapping = aes(x=data, y=saldo_ajuste)) +
   geom_bar(stat = 'identity') +
   labs(x = "ano/mês", y = "saldo ajustado") +
-  ggtitle('Saldo de Empregos no Porto do Itaqui - Maranhão') +
-  theme_bw(base_size = 10) +
+  ggtitle('Saldo de Empregos do Maranhão (2020-2025)') +
+  theme_bw(base_size = 12) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
         plot.title = element_text(hjust = 0.5)) 
 
 # setwd("~/TCC/novocaged/graph")
 # ggsave('saldo_portuario_ma.png')
 
-# setwd('C:/Users/NOVO/Documents/TCC/novocaged/salvo_excel')
-# write_xlsx(saldo_ajustado_port, 'saldo_por_mes_porto_itaqui.xlsx')
-
-# BASE PARA ANÁLISE DE PERFIL ----
-# juntando linhas de movimentação e fora do prazo
-base_soma_port <- bind_rows(
-  mutate(df_mov, competencia = as.character(competenciamov)),
-  mutate(df_for, competencia = as.character(competenciamov))
-)
-
-nrow(df_mov)+nrow(df_for)-nrow(df_exc)
-
-# exclusão 
-base_filtrada <- base_soma_port |>
-  # join without matches
-  anti_join(df_exc, 
-            by = c("competenciamov","regiao","uf","municipio",
-                   "secao","subclasse","saldomovimentacao",
-                   "cbo2002ocupacao","categoria",
-                   "graudeinstrucao","idade","horascontratuais","racacor","sexo",
-                   "tipoempregador","tipoestabelecimento","tipomovimentacao",
-                   "tipodedeficiencia","indtrabintermitente","indtrabparcial","salario",
-                   "tamestabjan","indicadoraprendiz","origemdainformacao","competenciadec",
-                   "indicadordeforadoprazo","unidadesalariocodigo","valorsalariofixo")) |>
-  # existe 1 a menos do que deveria ser excluído
-  select("competenciamov","municipio","secao","subclasse",        
-         "cbo2002ocupacao","graudeinstrucao","idade","racacor",          
-         "sexo","tipodedeficiencia","salario","saldomovimentacao")
-
-setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
-saveRDS(base_filtrada, "ma_base_perfil.Rds")
-
-rm(base_filtrada,base_soma_port)
+setwd('C:/Users/NOVO/Documents/TCC/novocaged/salvo_excel')
+write_xlsx(saldo_ajustado_port, 'saldo_por_mes_ma.xlsx')
