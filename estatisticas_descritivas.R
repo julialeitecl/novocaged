@@ -212,6 +212,9 @@ base_perfil <- base |>
          cbo2002ocupacao,tipo_trabalhador,porto,
          saldomovimentacao,subclasse)
 
+# setwd('~/TCC/novocaged/memoriaR/portuaria_ma')
+# write_rds(base_perfil, 'base_tratada_perfil.Rds')
+
 # conferir vazios
 sapply(base_perfil, function(x) sum(is.na(x)))
 
@@ -390,7 +393,7 @@ ggplot(base,
     summarise(mean_salario = mean(salario)) |>
     View()
   
-# 5. Tabela de estatísticas descritivas ----
+# 5. Tabela de estatísticas descritivas gerais para o Complexo ----
 # Lista de variáveis categóricas para análise
 variaveis <- c("porto", "genero", "cor_raca", "instrucao", "faixa_salarial", "tipo_trabalhador")
   
@@ -414,3 +417,35 @@ tabela_descritiva <- do.call(rbind, lista_tabelas)
 
 setwd('~/TCC/novocaged/salvo_excel')
 write_xlsx(tabela_descritiva, 'tabela_descritiva.xlsx')
+
+# 6. Tabela de estatísticas descritivas por tipo de porto ----
+# Variáveis que serão analisadas por tipo de porto
+variaveis <- c("tipo_trabalhador", "genero", "cor_raca", "instrucao", "faixa_salarial")
+
+# Função para gerar estatísticas descritivas separadas por 'porto' (já classificado como Público ou Privado)
+resumo_por_porto <- function(var) {
+  tab <- table(base_perfil[[var]], base_perfil$porto)
+  tab_prop <- round(prop.table(tab, 2) * 100, 1)  # proporção dentro de cada tipo de porto
+  df_freq <- as.data.frame.matrix(tab)
+  df_prop <- as.data.frame.matrix(tab_prop)
+  
+  # Construindo data frame final com colunas para frequência e proporção
+  resultado <- data.frame(
+    Variavel = var,
+    Categoria = rownames(df_freq),
+    Freq_Publico = df_freq$Público,
+    Prop_Publico = df_prop$Público,
+    Freq_Privado = df_freq$Privado,
+    Prop_Privado = df_prop$Privado
+  )
+  return(resultado)
+}
+
+# Aplicando a função a todas as variáveis da lista
+lista_resultados <- lapply(variaveis, resumo_por_porto)
+
+# Unindo os resultados em uma única tabela
+tabela_comparativa_por_porto <- do.call(rbind, lista_resultados)
+
+setwd('~/TCC/novocaged/salvo_excel')
+write_xlsx(tabela_comparativa_por_porto, 'tabela_comparativa_por_porto.xlsx')

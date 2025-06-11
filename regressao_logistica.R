@@ -5,19 +5,13 @@ library(tidytable)
 library(stats)
 
 # 1 Tratamento e limpeza ----
-setwd("~/TCC/novocaged/memoriaR")
-data <- readRDS('ma_base_perfil_tratada.Rds')
+setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
+data <- readRDS('base_tratada_perfil.Rds')
 
 # limpeza do df
-df <- subset(data, select = c('genero','cor_raca','instrucao',
-                            'faixa_salarial','saldomovimentacao',
-                            'grande_grupo','tipo_trab'))
+df <- subset(data, select = c("porto", "genero", "cor_raca", "instrucao", 
+                              "faixa_salarial", "tipo_trabalhador"))
 
-df <- df |>
-  mutate('saldo' = case_when(saldomovimentacao == 1 ~ 'Admitidos',
-                             saldomovimentacao == -1 ~ 'Desligados',
-                             TRUE ~ NA)) |>
-  select(-saldomovimentacao)
 
 # 2 Dummies ----
 dummies <- get_dummies(df)
@@ -43,7 +37,7 @@ dummies <- dummies |>
 #           5-10SM
 #saldo: 1 Admitidos
 
-#DEPENDENTE: ocupação (cbo)
+#DEPENDENTE: porto publico ou privado 
 
 dummies <- dummies |> 
   select(genero_Homem,
