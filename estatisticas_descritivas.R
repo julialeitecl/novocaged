@@ -199,15 +199,14 @@ base_perfil <- base |>
                                       (ano == 2024 & salario > 5*1412 & salario <= 10*1412) ~ '5-10SM',
                                       (ano == 2024 & salario > 10*1412) ~ '>10SM'
                                       ),
-         'tipo_trabalhador' = case_when(COD_GRANDEGP %in% c(0:1) ~ 'chefia',
-                                        COD_GRANDEGP %in% c(2:9) ~ 'base',
+         'tipo_trabalhador' = case_when(COD_GRANDEGP %in% c(0:1) ~ 'Chefia',
+                                        COD_GRANDEGP %in% c(2:9) ~ 'Base',
                                         TRUE ~ NA),
-         
          # cnaes cluster itaqui: c(5232000, 5231102, 5211701)
          # complexo portuário restante: c(5231101,5212500,5231103,4731800,3511501,5239701,5239799,5030101,5030102,5099801,5099899)
          # separação de cnae 5231102 entre a divisão?
-         'porto' = case_when(subclasse %in% c(5232000, 5231102, 5211701) ~ 'publico',
-                              subclasse %in% c(5231101,5212500,5231103,5239701,5239799,5030101,5030102,5099801,5099899) ~ 'privado')
+         'porto' = case_when(subclasse %in% c(5232000, 5231102, 5211701) ~ 'Público',
+                              subclasse %in% c(5231101,5212500,5231103,5239701,5239799,5030101,5030102,5099801,5099899) ~ 'Privado')
          ) |>
   select(ano,genero,cor_raca,instrucao,faixa_salarial,salario,
          cbo2002ocupacao,tipo_trabalhador,porto,
@@ -230,13 +229,13 @@ port_tab <- data.frame(
   Frequencia = as.numeric(abs_port),
   Proporcao = as.numeric(rel_port)) 
 
-abs_port<-table(base_perfil$subclasse)
-rel_port<-round(prop.table(table(base_perfil$subclasse))*100, 1)
-port_tab <- data.frame(
-  Categ = names(abs_port),
-  Frequencia = as.numeric(abs_port),
-  Proporcao = as.numeric(rel_port)) 
-
+  # Tipo de trabalhador
+abs_tipo_trab <-table(base_perfil$tipo_trabalhador)
+rel_tipo_trab <-round(prop.table(table(base_perfil$tipo_trabalhador))*100, 1)
+tipo_trab_tab <- data.frame(
+  Categ = names(abs_tipo_trab),
+  Frequencia = as.numeric(abs_tipo_trab),
+  Proporcao = as.numeric(rel_tipo_trab)) 
 
   # Gênero
 abs_gen<-table(base_perfil$genero)
@@ -263,7 +262,6 @@ ggplot(base_perfil,
   theme_bw(base_size = 14) +
   theme(plot.title = element_text(hjust = 0.5),
         legend.position = "none")
-
 
   # Cor/Raça
 abs_cor<-table(base_perfil$cor_raca)
@@ -391,3 +389,28 @@ ggplot(base,
     group_by(genero,cor_raca) |>
     summarise(mean_salario = mean(salario)) |>
     View()
+  
+# 5. Tabela de estatísticas descritivas ----
+# Lista de variáveis categóricas para análise
+variaveis <- c("porto", "genero", "cor_raca", "instrucao", "faixa_salarial", "tipo_trabalhador")
+  
+# Função para gerar estatísticas descritivas para uma variável
+resumo_var <- function(var) {
+  tab_abs <- table(base_perfil[[var]])
+  tab_rel <- round(prop.table(tab_abs) * 100, 1)
+  data.frame(
+    Variavel = var,
+    Categoria = names(tab_abs),
+    Frequencia = as.numeric(tab_abs),
+    Proporcao = as.numeric(tab_rel)
+  )
+}
+
+# Aplicando a função a todas as variáveis
+lista_tabelas <- lapply(variaveis, resumo_var)
+
+# Consolidando em uma única tabela
+tabela_descritiva <- do.call(rbind, lista_tabelas)
+
+setwd('~/TCC/novocaged/salvo_excel')
+write_xlsx(tabela_descritiva, 'tabela_descritiva.xlsx')
