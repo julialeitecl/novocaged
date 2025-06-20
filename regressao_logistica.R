@@ -3,6 +3,8 @@ library(readxl)
 library(writexl)
 library(tidytable)
 library(stats)
+library(broom)        # Para formatar resultados do modelo
+library(car)          # Para diagnóstico (opcional)
 
 # 1 Tratamento e limpeza ----
 setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
@@ -10,45 +12,54 @@ data <- readRDS('base_tratada_perfil.Rds')
 
 # limpeza do df
 df <- subset(data, select = c("porto", "genero", "cor_raca", "instrucao", 
-                              "faixa_salarial", "tipo_trabalhador"))
-
+                              "tipo_trabalhador"))
 
 # 2 Dummies ----
-dummies <- get_dummies(df)
-dummies <- dummies |>
-  select()
+# Variável dependente: 1 = Porto do Itaqui, 0 = Portos privados
+df$porto_publico <- ifelse(df$porto == "Público", 1, 0)
 
-#INDEPENDENTES
-#genero:    Homem
-#cor/raça:  Branca 
-#           Parda
-#           Preta
-#           Amarela
-#           Indígena
-#escolaridade: 
-#           Médio Completo
-#           Fundamental Completo
-#           Superior Completo
-#           Fundamental Incompleto
-#           Pós-Graduação Completa
-#salario:   <1SM 
-#           1-3SM
-#           3-5SM
-#           5-10SM
-#saldo: 1 Admitidos
+# Variáveis independentes (exemplo com gênero, raça e escolaridade)
+  # Converter variáveis categóricas em fator
+df <- df %>%
+  mutate(
+    genero = factor(genero, levels = c("Homem", "Mulher")),
+    cor_raca = factor(cor_raca, levels = c("Parda", "Branca", "Preta", "Outros")),
+    instrucao = factor(instrucao, levels = c("Médio Completo", "Superior Completo", "Fundamental Completo", "Pós-Graduação Completa", "Fundamental Incompleto"))
+  )
 
-#DEPENDENTE: porto publico ou privado 
+summary(df)
 
-dummies <- dummies |> 
-  select(genero_Homem,
-         cor_raca_Branca,cor_raca_Parda,cor_raca_Preta,cor_raca_Amarela,cor_raca_Indígena,
-         `instrucao_Médio Completo`,`instrucao_Fundamental Completo`,`instrucao_Superior Completo`,`instrucao_Fundamental Incompleto`,`instrucao_Pós-Graduação Completa`,
-         `faixa_salarial_<1SM`,`faixa_salarial_1-3SM`,`faixa_salarial_3-5SM`,`faixa_salarial_5-10SM`,
-         saldo_Admitidos,
-         tipo_trab_manual)
+# 3 Estimação do modelo de regressão logística ----
+modelo_logit <- glm(porto_publico ~ genero + cor_raca + instrucao,
+                    data = df,
+                    family = binomial(link = "logit"))
 
-model <- glm(tipo_trab_manual ~ genero_Homem, 
-             family = binomial(link = "logit"), data = dummies)
+# 4 Resultados do modelo ----
+summary(modelo_logit)
 
-summary(model)
+  # Odds ratios e intervalos de confiança
+exp(cbind(OddsRatio = coef(modelo_logit), confint(modelo_logit)))
 
+  # Resultado arrumado com broom
+tidy(modelo_logit, exponentiate = TRUE, conf.int = TRUE)
+
+# 5 Diagnóstico e qualidade do ajuste ----
+  # Pseudo R² de McFadden
+pR2(modelo_logit)
+
+  # VIF para verificar multicolinearidade
+vif(modelo_logit)
+
+# 6 Visualização dos odds ratios ----
+  # Criar gráfico dos odds ratios
+library(ggplot2)
+resultados <- tidy(modelo_logit, exponentiate = TRUE, conf.int = TRUE)
+
+ggplot(resultados, aes(x = term, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  labs(title = "Odds Ratios do modelo logístico",
+       x = "Variáveis",
+       y = "Odds Ratio") +
+  coord_flip() +
+  theme_minimal()
