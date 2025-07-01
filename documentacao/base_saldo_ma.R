@@ -76,7 +76,7 @@ df_exc <- arquivos_caged('EXC')
 
 rm(cagedexc_baixadas,cagedexc_lista,cagedfor_baixadas,cagedfor_lista,cagedmov_baixadas,cagedmov_lista,arquivos_caged,competencias,k,meses,anos)
 
-# CÁLCULO DE ADMITIDOS, DESLIGADOS E SALDO DO PORTO DO ITAQUI - MARANHÃO ----
+# CÁLCULO DE ADMITIDOS, DESLIGADOS E SALDO DO MARANHÃO ----
 montar_saldo <- function(df){
   saldo <- df |>
     group_by(competenciamov) |>

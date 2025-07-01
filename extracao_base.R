@@ -24,7 +24,7 @@ meses <- formatC(1:12, width = 2, flag = '0')
   # 5231102 – Atividade do Operador Portuário
   # 5211701 – Armazenagem Gerais  emissão de warrant
 ## resto do complexo portuário ma 
-## cnaes <- c(5231101,5231103)
+## cnaes <- c()
   # 5231101 – Administração da Infraestrutura Portuária
   # 5212500 – Carga e Descarga
   # 5231103 – Gestão de Terminais Aquaviários
@@ -187,7 +187,7 @@ base_filtrada <- base_soma_port |>
          "cbo2002ocupacao","graudeinstrucao","idade","racacor",          
          "sexo","tipodedeficiencia","salario","saldomovimentacao")
 
-setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
-saveRDS(base_filtrada, "ma_base_trabalhadores_portuarios.Rds")
+# setwd("~/TCC/novocaged/memoriaR/portuaria_ma")
+# saveRDS(base_filtrada, "ma_base_trabalhadores_portuarios.Rds")
 
 rm(base_filtrada,base_soma_port)
