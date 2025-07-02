@@ -12,54 +12,42 @@ data <- readRDS('base_tratada_perfil.Rds')
 
 # limpeza do df
 df <- subset(data, select = c("porto", "genero", "cor_raca", "instrucao", 
-                              "tipo_trabalhador"))
+                              "tipo_trabalhador", "faixa_salarial"))
 
 # 2 Dummies ----
-# Variável dependente: 1 = Porto do Itaqui, 0 = Portos privados
+# 1. Variável dependente: 1 = Porto do Itaqui, 0 = Portos privados
 df$porto_publico <- ifelse(df$porto == "Público", 1, 0)
 
-# Variáveis independentes (exemplo com gênero, raça e escolaridade)
+# 2. Variável dependente: 1 = Chefes, 0 = Técnicos
+df$trabalhador_chefe <- ifelse(df$tipo_trabalhador == "Chefia", 1, 0)
+
   # Converter variáveis categóricas em fator
 df <- df %>%
   mutate(
+    porto = factor(porto, levels = c("Privado", "Público")),
     genero = factor(genero, levels = c("Homem", "Mulher")),
-    cor_raca = factor(cor_raca, levels = c("Parda", "Branca", "Preta", "Outros")),
-    instrucao = factor(instrucao, levels = c("Médio Completo", "Superior Completo", "Fundamental Completo", "Pós-Graduação Completa", "Fundamental Incompleto"))
+    cor_raca = factor(cor_raca, levels = c("Parda", "Branca", "Preta", "Amarela", "Indígena")),
+    # de acordo com a ordem das descritivas
+    instrucao = factor(instrucao, levels = c("Médio Completo", "Superior Completo", "Fundamental Completo", 
+                                             "Fundamental Incompleto","Pós-Graduação Completa")),
+    faixa_salarial = factor(faixa_salarial, levels = c("1-3SM", "<1SM", "3-5SM", "5-10SM", ">10SM"))
   )
 
+# descritiva das variáveis selecionadas
 summary(df)
 
-# 3 Estimação do modelo de regressão logística ----
-modelo_logit <- glm(porto_publico ~ genero + cor_raca + instrucao,
+# 3 Estimação dos modelos de regressão logística ----
+## Modelo para tipo de porto 
+modelo1 <- glm(porto_publico ~ genero + cor_raca + instrucao + faixa_salarial,
                     data = df,
                     family = binomial(link = "logit"))
 
-# 4 Resultados do modelo ----
-summary(modelo_logit)
+summary(modelo1)
 
-  # Odds ratios e intervalos de confiança
-exp(cbind(OddsRatio = coef(modelo_logit), confint(modelo_logit)))
+tabela_resultados1 <- tidy(modelo1, exponentiate = TRUE, conf.int = TRUE)
 
-  # Resultado arrumado com broom
-tidy(modelo_logit, exponentiate = TRUE, conf.int = TRUE)
-
-# 5 Diagnóstico e qualidade do ajuste ----
-  # Pseudo R² de McFadden
-pR2(modelo_logit)
-
-  # VIF para verificar multicolinearidade
-vif(modelo_logit)
-
-# 6 Visualização dos odds ratios ----
-  # Criar gráfico dos odds ratios
-library(ggplot2)
-resultados <- tidy(modelo_logit, exponentiate = TRUE, conf.int = TRUE)
-
-ggplot(resultados, aes(x = term, y = estimate)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
-  labs(title = "Odds Ratios do modelo logístico",
-       x = "Variáveis",
-       y = "Odds Ratio") +
-  coord_flip() +
-  theme_minimal()
+## Modelo para tipo de trabalhador
+modelo2 <- glm(trabalhador_chefe ~ genero + cor_raca + instrucao + faixa_salarial + porto,
+               data = df,
+               family = binomial(link = "logit"))
+summary(modelo2)
