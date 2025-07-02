@@ -153,7 +153,7 @@ base_perfil <- base |>
                                  (graudeinstrucao %in% c(7,8)) ~ 'Médio Completo',
                                  (graudeinstrucao == 9) ~ 'Superior Completo',
                                  (graudeinstrucao %in% c(10,11,80)) ~ 'Pós-Graduação Completa',
-                                 (graudeinstrucao %in% c(1,99)) ~ 'N/I', #Não Identificado e analfabetos
+                                 (graudeinstrucao == 1) ~ "Analfabetos",
                                  TRUE ~ NA),
          # https://www.dieese.org.br/analisecestabasica/salarioMinimo.html
          # salario != valorsalariofixo 
